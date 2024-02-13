@@ -29,11 +29,11 @@ func TestNextToken(t *testing.T) {
 		tok := lexer.NextToken()
 
 		if tok.Type != test.expectedType {
-			t.Fatal("tests[%d] - token type wrong. expected=%q, got=%q", i, test.expectedType, tok.Type)
+			t.Fatalf("tests[%d] - token type wrong. expected=%q, got=%q", i, test.expectedType, tok.Type)
 		}
 
 		if tok.Literal != test.expectedLiteral {
-			t.Fatal("tests[%d] - token literal wrong. expected=%q, got=%q", i, test.expectedLiteral, tok.Literal)
+			t.Fatalf("tests[%d] - token literal wrong. expected=%q, got=%q", i, test.expectedLiteral, tok.Literal)
 		}
 	}
 }
