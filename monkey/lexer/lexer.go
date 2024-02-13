@@ -2,6 +2,18 @@ package lexer
 
 import "go_interpreter/monkey/token"
 
+func newToken(tokenType token.TokenType, char byte) token.Token {
+	return token.Token{Type: tokenType, Literal: string(char)}
+}
+
+func isLetter(char byte) bool {
+	return 'a' <= char && char <= 'z' || 'A' <= char && char <= 'Z' || char == '_'
+}
+
+func isDigit(char byte) bool {
+	return '0' <= char && char <= '9'
+}
+
 type Lexer struct {
 	input        string
 	position     int  // Current position in input (points to current char)
@@ -15,6 +27,12 @@ func New(input string) *Lexer {
 	return l
 }
 
+func (l *Lexer) skipWhitespace() {
+	for l.char == ' ' || l.char == '\t' || l.char == '\n' || l.char == '\r' {
+		l.readChar()
+	}
+}
+
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
 		l.char = 0
@@ -25,12 +43,26 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
-func newToken(tokenType token.TokenType, char byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(char)}
+func (l *Lexer) readNumber() string {
+	startPosition := l.position
+	for isDigit(l.char) {
+		l.readChar()
+	}
+	return l.input[startPosition:l.position]
+}
+
+func (l *Lexer) readIdentifier() string {
+	startPosition := l.position
+	for isLetter(l.char) {
+		l.readChar()
+	}
+	return l.input[startPosition:l.position]
 }
 
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
+
+	l.skipWhitespace()
 
 	switch l.char {
 	case '=':
@@ -52,6 +84,18 @@ func (l *Lexer) NextToken() token.Token {
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
+	default:
+		if isLetter(l.char) {
+			tok.Literal = l.readIdentifier()
+			tok.Type = token.LookupIdent(tok.Literal)
+			return tok
+		} else if isDigit(l.char) {
+			tok.Type = token.INT
+			tok.Literal = l.readNumber()
+			return tok
+		} else {
+			tok = newToken(token.ILLEGAL, l.char)
+		}
 	}
 
 	l.readChar()
